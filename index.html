@@ -8,13 +8,14 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
+            font-size: 90%;
         }
 
         .container {
-            width: 400px;
+            width: 350px;
             margin: 50px auto;
             background-color: #fff;
-            padding: 20px;
+            padding: 5px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
@@ -56,7 +57,7 @@
         }
 
         th, td {
-            padding: 10px;
+            padding: 5px;
             text-align: left;
             border-bottom: 1px solid #ccc;
         }
@@ -137,7 +138,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>To Do List</h1>
+        <h1><u>To Do List</u></h1>
         <div class="input-container">
             <input type="text" id="taskInput" placeholder="Enter a task" onchange="addTask()">
             <button id="addBtn">Add Task</button>

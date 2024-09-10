@@ -121,6 +121,14 @@
             font-size: 0.9em;
             color: #888;
         }
+
+        tr.due-today {
+            background-color: orange;
+        }
+
+        tr.due-soon {
+            background-color: lightgreen;
+        }
     </style>
 </head>
 <body>
@@ -133,12 +141,10 @@
         <table>
             <thead>
                 <tr>
-                    <!-- <th>Complete</th> -->
-                    <th></th>
+                    <th>Complete</th>
                     <th>Task</th>
                     <th>Date</th>
-                    <!-- <th>Actions</th> -->
-                    <th></th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="taskList"></tbody>
@@ -187,12 +193,12 @@
             taskInput.value = ''; // Clear the input field
         }
 
-        // Format date as DD-MM-YY
+        // Format date as YYYY-MM-DD for input date field
         function formatDate(date) {
             const day = String(date.getDate()).padStart(2, '0');
             const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = String(date.getFullYear());
-            return `${day}/${month}/${year}`;
+            const year = date.getFullYear();
+            return `${year}-${month}-${day}`;
         }
 
         // Add task to the table
@@ -214,9 +220,13 @@
                 taskCell.classList.add('completed');
             }
 
-            // Date cell
+            // Date cell (input type="date")
             const dateCell = document.createElement('td');
-            dateCell.textContent = date;
+            const dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.value = date;
+            dateInput.addEventListener('change', () => handleDateChange(tr, dateInput.value));
+            dateCell.appendChild(dateInput);
 
             // Action cell (Delete button)
             const actionCell = document.createElement('td');
@@ -233,7 +243,32 @@
             tr.appendChild(actionCell);
 
             taskList.appendChild(tr);
+            checkTaskDueDate(tr, date);
             checkAllCompleted();
+        }
+
+        // Handle date change and recheck the background color based on the new date
+        function handleDateChange(tr, date) {
+            checkTaskDueDate(tr, date);
+            updateTaskDateInLocalStorage(tr.querySelector('td:nth-child(2)').textContent, date);
+        }
+
+        // Check the task due date and update the row background color
+        function checkTaskDueDate(tr, date) {
+            const today = new Date();
+            const selectedDate = new Date(date);
+
+            const differenceInTime = selectedDate.getTime() - today.getTime();
+            const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+
+            // Remove existing classes
+            tr.classList.remove('due-today', 'due-soon');
+
+            if (differenceInDays === 0) {
+                tr.classList.add('due-today'); // Today
+            } else if (differenceInDays > 0 && differenceInDays <= 2) {
+                tr.classList.add('due-soon'); // Within 2 days
+            }
         }
 
         // Toggle task completion
@@ -253,10 +288,17 @@
             localStorage.setItem('tasks', JSON.stringify(tasks));
         }
 
-        // Update task in LocalStorage
+        // Update task completion status in LocalStorage
         function updateTaskInLocalStorage(text, completed) {
             let tasks = JSON.parse(localStorage.getItem('tasks'));
             tasks = tasks.map(task => task.text === text ? { ...task, completed } : task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Update task date in LocalStorage
+        function updateTaskDateInLocalStorage(text, date) {
+            let tasks = JSON.parse(localStorage.getItem('tasks'));
+            tasks = tasks.map(task => task.text === text ? { ...task, date } : task);
             localStorage.setItem('tasks', JSON.stringify(tasks));
         }
 

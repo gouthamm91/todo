@@ -121,9 +121,13 @@
             font-size: 0.9em;
             color: #888;
         }
-
+        
         tr.due-today {
             background-color: orange;
+        }
+
+        tr.due-week {
+            background-color: gray;
         }
 
         tr.due-soon {
@@ -266,8 +270,10 @@
 
             if (differenceInDays === 0) {
                 tr.classList.add('due-today'); // Today
-            } else if (differenceInDays > 0 && differenceInDays <= 2) {
-                tr.classList.add('due-soon'); // Within 2 days
+            } else if (differenceInDays > 0 && differenceInDays <= 3) {
+                tr.classList.add('due-soon'); // Within 3 days
+            } else if (differenceInDays > 3 && differenceInDays <= 7) {
+                tr.classList.add('due-week'); // Within 7 days
             }
         }
 

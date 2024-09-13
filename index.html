@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -327,6 +327,436 @@
             let tasks = JSON.parse(localStorage.getItem('tasks'));
             tasks = tasks.filter(task => task.text !== text);
             localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Check if all tasks are completed
+        function checkAllCompleted() {
+            const rows = document.querySelectorAll('tbody tr');
+            const allCompleted = Array.from(rows).length > 0 && Array.from(rows).every(row => row.querySelector('td:nth-child(2)').classList.contains('completed'));
+            if (allCompleted) {
+                popup.classList.remove('hidden');
+            } else {
+                popup.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
+ -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Do App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            width: 350px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        input[type="text"] {
+            width: 70%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        input[type="date"] {
+            border: 0;
+            background-color: transparent;
+            font-family: Arial, sans-serif;
+            color: #303030;
+            width: 100px;
+        }
+
+        button {
+            padding: 8px;
+            border: none;
+            background-color: #606060;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 5px;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+            text-align: center;
+            font-size: 90%;
+        }
+
+        th {
+            background-color: #f8f8f8;
+            text-align: center;
+        }
+
+        td.completed {
+            text-decoration: line-through;
+            color: grey;
+        }
+
+        .deleteBtn {
+            background-color: transparent;
+            border: none;
+            padding: 5px;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .deleteBtn:hover {
+            background-color: #c82333;
+        }
+
+        .priority-circle {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .high-priority {
+            background-color: rgba(225, 150, 150, 1.0);
+            border: 1px solid grey;
+        }
+
+        .medium-priority {
+            background-color: rgba(150, 150, 225, 1.0);
+            border: 1px solid grey;
+        }
+
+        .low-priority {
+            background-color: transparent;
+            border: 1px solid grey;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .popup p {
+            margin: 0;
+        }
+
+        .popup button {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .popup button:hover {
+            background-color: #c82333;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .task-date {
+            font-size: 0.9em;
+            color: #888;
+        }
+        .legend-div {
+            display: inline-block;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            margin-top: 20px;
+        }
+        .legend-text {
+            position: relative;
+            top: -5px;
+            border: 1px solid transparent;
+            background-color: transparent;
+/*            display: inline-block;*/
+            width: 75px;
+            margin-right: 10px;
+            font-size: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>To Do List</h1>
+        <div class="input-container">
+            <input type="text" id="taskInput" placeholder="Enter a task" onchange="addTask()">
+            <button id="addBtn">Add Task</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <!-- <th>Complete</th> -->
+                    <th></th>
+                    <th>Task</th>
+                    <th>Date</th>
+                    <th>Priority</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody id="taskList"></tbody>
+        </table>
+        <div style="text-align: center;">
+            <div class="legend-div high-priority"></div><a class="legend-text"> Today</a>
+            <div class="legend-div medium-priority"></div><a class="legend-text"> <= 3 days</a>
+            <div class="legend-div low-priority"></div><a class="legend-text"> > 3 days</a>
+        </div>
+    </div>
+
+    <div id="popup" class="popup hidden">
+        <p>Congrats!!! All tasks are completed!!!</p>
+        <button id="closePopupBtn">Close</button>
+    </div>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', loadTasks);
+
+        const taskInput = document.getElementById('taskInput');
+        const addBtn = document.getElementById('addBtn');
+        const taskList = document.getElementById('taskList');
+        const popup = document.getElementById('popup');
+        const closePopupBtn = document.getElementById('closePopupBtn');
+
+        // Event listener for adding a task
+        addBtn.addEventListener('click', addTask);
+
+        // Event listener for closing the popup
+        closePopupBtn.addEventListener('click', () => {
+            popup.classList.add('hidden');
+        });
+
+        // Load tasks from LocalStorage and sort by date
+        function loadTasks() {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks = sortTasksByDate(tasks);
+            tasks.forEach(task => {
+                addTaskToTable(task.text, task.completed, task.date);
+            });
+            checkAllCompleted();
+        }
+
+        // Add a task and sort by date
+        function addTask() {
+            const taskText = taskInput.value.trim();
+            if (taskText === '') return;
+
+            const currentDate = formatDate(new Date());
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.push({ text: taskText, completed: false, date: currentDate });
+
+            localStorage.setItem('tasks', JSON.stringify(sortTasksByDate(tasks)));
+            taskInput.value = ''; // Clear the input field
+
+            refreshTaskList();
+        }
+
+        // Sort tasks by date (increasing order)
+        function sortTasksByDate(tasks) {
+            return tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+        }
+
+        // Refresh the displayed task list after adding a new task
+        function refreshTaskList() {
+            taskList.innerHTML = '';  // Clear the current list
+            loadTasks();  // Reload tasks
+        }
+
+        // Format date as YYYY-MM-DD for input date field
+        function formatDate(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${year}-${month}-${day}`;
+        }
+
+        // Add task to the table
+        function addTaskToTable(text, completed, date) {
+            const tr = document.createElement('tr');
+            
+            // Checkbox for completion status in a separate column
+            const checkboxCell = document.createElement('td');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = completed;
+            checkbox.addEventListener('change', toggleTaskCompletion);
+            checkboxCell.appendChild(checkbox);
+
+            // Task cell
+            const taskCell = document.createElement('td');
+            taskCell.textContent = text;
+            if (completed) {
+                taskCell.classList.add('completed');
+            }
+
+            // Date cell (input type="date")
+            const dateCell = document.createElement('td');
+            const dateInput = document.createElement('input');
+            dateInput.type = 'date';
+            dateInput.value = date;
+            dateInput.addEventListener('change', () => handleDateChange(tr, dateInput.value));
+            dateCell.appendChild(dateInput);
+
+            // Priority cell (colored circle)
+            const priorityCell = document.createElement('td');
+            const priorityCircle = document.createElement('div');
+            priorityCircle.classList.add('priority-circle');
+            setPriorityColor(priorityCircle, date);
+            priorityCell.appendChild(priorityCircle);
+
+            // Action cell (Delete button)
+            const actionCell = document.createElement('td');
+            const deleteBtn = document.createElement('button');
+            deleteBtn.innerHTML = '❌';
+            deleteBtn.classList.add('deleteBtn');
+            deleteBtn.addEventListener('click', deleteTask);
+            actionCell.appendChild(deleteBtn);
+
+            // Append all cells to the row
+            tr.appendChild(checkboxCell);
+            tr.appendChild(taskCell);
+            tr.appendChild(dateCell);
+            tr.appendChild(priorityCell);
+            tr.appendChild(actionCell);
+
+            taskList.appendChild(tr);
+            checkTaskDueDate(tr, date);
+            if (completed) {
+                tr.classList.add('completed');
+            }
+            checkAllCompleted();
+        }
+
+        // Handle date change and recheck the background color based on the new date
+        function handleDateChange(tr, date) {
+            checkTaskDueDate(tr, date);
+            updateTaskDateInLocalStorage(tr.querySelector('td:nth-child(2)').textContent, date);
+            refreshTaskList(); // Sort and refresh after date change
+        }
+
+        // Check the task due date and update the row background color
+        function checkTaskDueDate(tr, date) {
+            const today = new Date();
+            const selectedDate = new Date(date);
+
+            const differenceInTime = selectedDate.getTime() - today.getTime();
+            const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+
+            // Remove existing classes
+            tr.classList.remove('due-today', 'due-soon');
+
+            const priorityCircle = tr.querySelector('.priority-circle');
+            setPriorityColor(priorityCircle, date);
+        }
+
+        // Set the priority circle's color based on the date
+        function setPriorityColor(circle, date) {
+            const today = new Date();
+            const selectedDate = new Date(date);
+
+            const differenceInTime = selectedDate.getTime() - today.getTime();
+            const differenceInDays = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+
+            // Set color based on date proximity
+            circle.classList.remove('high-priority', 'medium-priority', 'low-priority');
+            if (differenceInDays <= 0) {
+                circle.classList.add('high-priority'); // Due today
+            } else if (differenceInDays > 0 && differenceInDays <= 3) {
+                circle.classList.add('medium-priority'); // Due within 2 days
+            } else {
+                circle.classList.add('low-priority'); // More than 2 days
+            }
+        }
+
+        // Toggle task completion
+        function toggleTaskCompletion(event) {
+            const row = event.target.closest('tr');
+            const taskCell = row.querySelector('td:nth-child(2)');
+            taskCell.classList.toggle('completed');
+            
+            const taskText = taskCell.textContent;
+            updateTaskInLocalStorage(taskText, event.target.checked);
+            checkAllCompleted();
+        }
+
+        // Save task to LocalStorage
+        function saveTaskToLocalStorage(text, completed, date) {
+            const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.push({ text, completed, date });
+            localStorage.setItem('tasks', JSON.stringify(sortTasksByDate(tasks)));
+        }
+
+        // Update task completion status in LocalStorage
+        function updateTaskInLocalStorage(text, completed) {
+            let tasks = JSON.parse(localStorage.getItem('tasks'));
+            tasks = tasks.map(task => task.text === text ? { ...task, completed } : task);
+            localStorage.setItem('tasks', JSON.stringify(sortTasksByDate(tasks)));
+        }
+
+        // Update task date in LocalStorage
+        function updateTaskDateInLocalStorage(text, date) {
+            let tasks = JSON.parse(localStorage.getItem('tasks'));
+            tasks = tasks.map(task => task.text === text ? { ...task, date } : task);
+            localStorage.setItem('tasks', JSON.stringify(sortTasksByDate(tasks)));
+        }
+
+        // Delete task from list and LocalStorage
+        function deleteTask(event) {
+            const row = event.target.closest('tr');
+            const taskText = row.querySelector('td:nth-child(2)').textContent;
+            row.remove();
+            deleteTaskFromLocalStorage(taskText);
+            checkAllCompleted();
+        }
+
+        // Remove task from LocalStorage
+        function deleteTaskFromLocalStorage(text) {
+            let tasks = JSON.parse(localStorage.getItem('tasks'));
+            tasks = tasks.filter(task => task.text !== text);
+            localStorage.setItem('tasks', JSON.stringify(sortTasksByDate(tasks)));
         }
 
         // Check if all tasks are completed
